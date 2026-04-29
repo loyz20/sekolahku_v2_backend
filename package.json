@@ -12,7 +12,6 @@
     "migrate:down": "node scripts/migrate.js down"
   },
   "dependencies": {
-    "@google/genai": "^1.50.1",
     "@google/generative-ai": "^0.24.1",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.7",

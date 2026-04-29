@@ -46,9 +46,12 @@ async function deleteCP(req, res, next) {
  */
 async function getTP(req, res, next) {
     try {
-        const { pembelajaran_id } = req.query;
-        if (!pembelajaran_id) throw new Error('pembelajaran_id is required');
-        const result = await model.listTP(pembelajaran_id);
+        const { pembelajaran_id, mapel_id, fase } = req.query;
+        // Require at least one filter
+        if (!pembelajaran_id && !mapel_id && !fase) {
+            throw new Error('pembelajaran_id, mapel_id, or fase is required');
+        }
+        const result = await model.listTP({ pembelajaran_id, mapel_id, fase });
         return successResponse(res, result);
     } catch (error) {
         next(error);
@@ -87,8 +90,8 @@ async function deleteTP(req, res, next) {
  */
 async function getATP(req, res, next) {
     try {
-        const { pembelajaran_id } = req.query;
-        const result = await model.getATP(pembelajaran_id);
+        const { pembelajaran_id, mapel_id, fase, tahun_ajaran } = req.query;
+        const result = await model.getATP({ pembelajaran_id, mapel_id, fase, tahun_ajaran });
         return successResponse(res, result);
     } catch (error) {
         next(error);
@@ -97,8 +100,9 @@ async function getATP(req, res, next) {
 
 async function saveATP(req, res, next) {
     try {
+        // pembelajaran_id might be in params for backward compatibility, but we prefer body
         const { pembelajaran_id } = req.params;
-        const id = await model.saveATP(pembelajaran_id, req.body);
+        const id = await model.saveATP({ ...req.body, pembelajaran_id: pembelajaran_id || req.body.pembelajaran_id });
         return successResponse(res, { id }, 'Alur Tujuan Pembelajaran berhasil disimpan');
     } catch (error) {
         next(error);
@@ -110,9 +114,9 @@ async function saveATP(req, res, next) {
  */
 async function getModulAjarList(req, res, next) {
     try {
-        const { tp_id } = req.query;
-        const result = await model.listModulAjar(tp_id);
-        return successResponse(res, result);
+        const { mapel, fase } = req.query;
+        const rows = await model.listModulAjar(mapel, fase);
+        return successResponse(res, rows);
     } catch (error) {
         next(error);
     }
@@ -152,10 +156,51 @@ async function generateTP(req, res, next) {
     }
 }
 
+async function generateATP(req, res, next) {
+    try {
+        const { mapel, fase, tpList, total_minggu } = req.body;
+        if (!tpList || tpList.length === 0) {
+            throw new Error('Daftar TP diperlukan untuk generate alur');
+        }
+
+        const ai = require('../../utils/ai');
+        const result = await ai.generateATP({ mapel, fase, tpList, total_minggu: total_minggu || 18 });
+        
+        return successResponse(res, result.atp, 'AI berhasil menyusun alur pembelajaran');
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function deleteModulAjar(req, res, next) {
+    try {
+        await model.deleteModulAjar(req.params.id);
+        return successResponse(res, null, 'Modul Ajar berhasil dihapus');
+    } catch (error) {
+        next(error);
+    }
+}
+
+async function generateModulAjar(req, res, next) {
+    try {
+        const { mapel, fase, tp_deskripsi } = req.body;
+        if (!tp_deskripsi) {
+            throw new Error('Deskripsi TP diperlukan untuk generate modul');
+        }
+
+        const ai = require('../../utils/ai');
+        const result = await ai.generateModulAjar({ mapel, fase, tp_deskripsi });
+        
+        return successResponse(res, result, 'AI berhasil merumuskan modul ajar');
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getCP, createCP, updateCP, deleteCP,
     getTP, createTP, updateTP, deleteTP,
     getATP, saveATP,
-    getModulAjarList, getModulAjarDetail, saveModulAjar,
-    generateTP
+    getModulAjarList, getModulAjarDetail, saveModulAjar, deleteModulAjar,
+    generateTP, generateATP, generateModulAjar
 };

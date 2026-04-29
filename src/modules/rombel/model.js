@@ -36,7 +36,7 @@ async function listRombel({ search, page, limit, sortField, sortDirection, sekol
   const offset = (page - 1) * limit;
 
   const [rows] = await pool.query(
-    `SELECT r.id, r.sekolah_id, r.tahun_ajaran_id, r.nama, r.tingkat, r.wali_kelas_ptk_id,
+    `SELECT r.id, r.sekolah_id, r.tahun_ajaran_id, r.nama, r.tingkat, r.fase, r.wali_kelas_ptk_id,
             s.nama AS sekolah_nama,
             p.nama AS wali_kelas_nama,
             ta.tahun AS tahun_ajaran_nama
@@ -70,7 +70,7 @@ async function findRombelById(id, sekolahId) {
   }
 
   const [rows] = await pool.query(
-    `SELECT r.id, r.sekolah_id, r.tahun_ajaran_id, r.nama, r.tingkat, r.wali_kelas_ptk_id,
+    `SELECT r.id, r.sekolah_id, r.tahun_ajaran_id, r.nama, r.tingkat, r.fase, r.wali_kelas_ptk_id,
             s.nama AS sekolah_nama,
             p.nama AS wali_kelas_nama,
             ta.tahun AS tahun_ajaran_nama
@@ -89,9 +89,9 @@ async function findRombelById(id, sekolahId) {
 async function createRombel(data) {
   const id = crypto.randomUUID();
   await pool.query(
-    `INSERT INTO rombel (id, sekolah_id, tahun_ajaran_id, nama, tingkat, wali_kelas_ptk_id)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, data.sekolah_id, data.tahun_ajaran_id, data.nama, data.tingkat, data.wali_kelas_ptk_id || null]
+    `INSERT INTO rombel (id, sekolah_id, tahun_ajaran_id, nama, tingkat, fase, wali_kelas_ptk_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [id, data.sekolah_id, data.tahun_ajaran_id, data.nama, data.tingkat, data.fase, data.wali_kelas_ptk_id || null]
   );
 
   return findRombelById(id);
@@ -134,7 +134,7 @@ async function updateRombel(id, data, sekolahId) {
   const values = [];
 
   for (const [key, value] of Object.entries(data)) {
-    if (['nama', 'tingkat', 'tahun_ajaran_id', 'wali_kelas_ptk_id'].includes(key)) {
+    if (['nama', 'tingkat', 'fase', 'tahun_ajaran_id', 'wali_kelas_ptk_id'].includes(key)) {
       fields.push(`${key} = ?`);
       values.push(value === '' && key === 'wali_kelas_ptk_id' ? null : value);
     }

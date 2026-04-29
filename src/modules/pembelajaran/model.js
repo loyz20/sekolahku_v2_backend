@@ -18,10 +18,12 @@ async function findPembelajaranById(id) {
     `SELECT pb.id, pb.rombel_id, pb.mata_pelajaran_id, pb.ptk_id, pb.jam_per_minggu,
             mp.nama AS mata_pelajaran_nama,
             mp.kode AS mata_pelajaran_kode,
-            p.nama AS ptk_nama
+            p.nama AS ptk_nama,
+            r.fase AS fase
      FROM pembelajaran pb
      JOIN mata_pelajaran mp ON mp.id = pb.mata_pelajaran_id
      JOIN ptk p ON p.id = pb.ptk_id
+     JOIN rombel r ON r.id = pb.rombel_id
      WHERE pb.id = ?
      LIMIT 1`,
     [id]
@@ -57,7 +59,8 @@ async function listPembelajaranByRombel(rombelId, sekolahId) {
     `SELECT pb.id, pb.rombel_id, pb.mata_pelajaran_id, pb.ptk_id, pb.jam_per_minggu,
             mp.nama AS mata_pelajaran_nama,
             mp.kode AS mata_pelajaran_kode,
-            p.nama AS ptk_nama
+            p.nama AS ptk_nama,
+            r.fase AS fase
      FROM pembelajaran pb
      JOIN mata_pelajaran mp ON mp.id = pb.mata_pelajaran_id
      JOIN ptk p ON p.id = pb.ptk_id
@@ -76,7 +79,8 @@ async function listPembelajaran(sekolahId, limit = 50, offset = 0, ptkId = null)
             mp.nama AS mata_pelajaran_nama,
             mp.kode AS mata_pelajaran_kode,
             p.nama AS ptk_nama,
-            r.nama AS rombel_nama
+            r.nama AS rombel_nama,
+            r.fase AS fase
      FROM pembelajaran pb
      JOIN mata_pelajaran mp ON mp.id = pb.mata_pelajaran_id
      JOIN ptk p ON p.id = pb.ptk_id
