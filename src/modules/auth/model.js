@@ -3,12 +3,15 @@ const { pool } = require('../../config/db');
 
 async function findUserByUsername(username) {
   const [rows] = await pool.query(
-    `SELECT u.id, u.sekolah_id, u.username, u.password, u.role, u.ref_id,
+    `SELECT u.id, u.sekolah_id, u.username, u.password, u.role, u.ref_id, u.email, u.phone,
             COALESCE(p.nama, pd.nama, 'Administrator') as nama_asli,
+            pd.nisn, r_siswa.nama as rombel_nama,
             CASE WHEN r.id IS NOT NULL THEN 1 ELSE 0 END as is_wali_kelas
      FROM users u
      LEFT JOIN ptk p ON u.ref_id = p.id AND u.role IN ('guru', 'guru_bk')
      LEFT JOIN peserta_didik pd ON u.ref_id = pd.id AND u.role = 'siswa'
+     LEFT JOIN anggota_rombel ar ON pd.id = ar.peserta_didik_id AND u.role = 'siswa'
+     LEFT JOIN rombel r_siswa ON ar.rombel_id = r_siswa.id AND u.role = 'siswa'
      LEFT JOIN rombel r ON u.ref_id = r.wali_kelas_ptk_id AND u.role IN ('guru', 'guru_bk')
      WHERE u.username = ?
      LIMIT 1`,
@@ -22,10 +25,13 @@ async function findUserById(id) {
   const [rows] = await pool.query(
     `SELECT u.id, u.sekolah_id, u.username, u.password, u.role, u.ref_id, u.email, u.phone,
             COALESCE(p.nama, pd.nama, 'Administrator') as nama_asli,
+            pd.nisn, r_siswa.nama as rombel_nama,
             CASE WHEN r.id IS NOT NULL THEN 1 ELSE 0 END as is_wali_kelas
      FROM users u
      LEFT JOIN ptk p ON u.ref_id = p.id AND u.role IN ('guru', 'guru_bk')
      LEFT JOIN peserta_didik pd ON u.ref_id = pd.id AND u.role = 'siswa'
+     LEFT JOIN anggota_rombel ar ON pd.id = ar.peserta_didik_id AND u.role = 'siswa'
+     LEFT JOIN rombel r_siswa ON ar.rombel_id = r_siswa.id AND u.role = 'siswa'
      LEFT JOIN rombel r ON u.ref_id = r.wali_kelas_ptk_id AND u.role IN ('guru', 'guru_bk')
      WHERE u.id = ?
      LIMIT 1`,

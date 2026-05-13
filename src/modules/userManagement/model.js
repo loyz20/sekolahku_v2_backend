@@ -111,6 +111,11 @@ async function deleteUser(id) {
   return result.affectedRows > 0;
 }
 
+async function deleteUserByRefId(refId, role) {
+  const [result] = await pool.query('DELETE FROM users WHERE ref_id = ? AND role = ?', [refId, role]);
+  return result.affectedRows > 0;
+}
+
 async function getUserStats(sekolahId) {
   const filters = [];
   const values = [];
@@ -143,5 +148,6 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  deleteUserByRefId,
   getUserStats,
 };

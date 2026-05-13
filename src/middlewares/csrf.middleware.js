@@ -14,6 +14,11 @@ function validateCsrf(req, res, next) {
     return next();
   }
 
+  // Skip CSRF for API requests using Bearer tokens (safe from CSRF as browsers can't set headers cross-origin)
+  if (req.headers.authorization) {
+    return next();
+  }
+
   const csrfSecret = process.env.CSRF_SECRET || process.env.JWT_ACCESS_SECRET;
   if (!csrfSecret) {
     console.error('CSRF_SECRET or JWT_ACCESS_SECRET must be set');

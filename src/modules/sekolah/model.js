@@ -30,7 +30,7 @@ async function listSekolah({ search, page, limit, sortField, sortDirection }) {
 	const offset = (page - 1) * limit;
 
 	const [rows] = await pool.query(
-		`SELECT id, nama, npsn, logo_url, status, alamat, provinsi, kabupaten, kecamatan, desa, kode_pos, lintang, bujur, kepala_sekolah, akreditasi, email, no_telepon, website, created_at
+		`SELECT id, nama, npsn, logo_url, status, alamat, provinsi, kabupaten, kecamatan, desa, kode_pos, lintang, bujur, radius_presensi, kepala_sekolah, akreditasi, email, no_telepon, website, created_at
 		 FROM sekolah
 		 ${whereClause}
 		 ORDER BY ${sortField} ${sortDirection}
@@ -51,7 +51,7 @@ async function listSekolah({ search, page, limit, sortField, sortDirection }) {
 
 async function findSekolahById(id) {
 	const [rows] = await pool.query(
-		`SELECT id, nama, npsn, logo_url, status, alamat, provinsi, kabupaten, kecamatan, desa, kode_pos, lintang, bujur, kepala_sekolah, akreditasi, email, no_telepon, website, created_at
+		`SELECT id, nama, npsn, logo_url, status, alamat, provinsi, kabupaten, kecamatan, desa, kode_pos, lintang, bujur, radius_presensi, kepala_sekolah, akreditasi, email, no_telepon, website, created_at
 		 FROM sekolah
 		 WHERE id = ?
 		 LIMIT 1`,
@@ -95,7 +95,7 @@ async function createSekolah(data) {
 
 const SEKOLAH_UPDATABLE_FIELDS = new Set([
 	'nama', 'npsn', 'status', 'alamat', 'provinsi', 'kabupaten',
-	'kecamatan', 'desa', 'kode_pos', 'lintang', 'bujur',
+	'kecamatan', 'desa', 'kode_pos', 'lintang', 'bujur', 'radius_presensi',
   'kepala_sekolah', 'akreditasi', 'email', 'no_telepon', 'website',
 ]);
 

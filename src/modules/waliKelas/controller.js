@@ -49,6 +49,25 @@ async function getAttendanceRecap(req, res, next) {
     }
 }
 
+async function updateAttendance(req, res, next) {
+  try {
+    const ptkId = req.user.ref_id;
+    const sekolahId = req.user.sekolah_id;
+    const { peserta_didik_id, tanggal, status, catatan } = req.body;
+
+    const result = await waliKelasService.updateStudentAttendance(ptkId, sekolahId, {
+      peserta_didik_id,
+      tanggal,
+      status,
+      catatan
+    });
+
+    return successResponse(res, { message: 'Absensi berhasil diperbarui', data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function broadcastMessage(req, res, next) {
   try {
     const { message, title = 'Pesan Wali Kelas' } = req.body;
@@ -85,5 +104,6 @@ module.exports = {
   getDashboardStats,
   getStudents,
   getAttendanceRecap,
+  updateAttendance,
   broadcastMessage,
 };

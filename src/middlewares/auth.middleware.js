@@ -11,6 +11,11 @@ const ErrorCode = require('../constants/errorCodes');
  *   - jti
  */
 function authenticate(req, res, next) {
+  // Skip authentication for OPTIONS requests (CORS preflight)
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   // Try to get token from httpOnly cookie first, then fallback to Authorization header
   let token = req.cookies?.access_token;
 
@@ -22,7 +27,13 @@ function authenticate(req, res, next) {
   }
 
   if (!token) {
-    return errorResponse(res, 'Token tidak ditemukan', null, 401, ErrorCode.UNAUTHORIZED);
+    return errorResponse(
+      res, 
+      'Anda harus login terlebih dahulu. Silakan gunakan endpoint /api/v1/auth/login',
+      null, 
+      401, 
+      ErrorCode.UNAUTHORIZED
+    );
   }
 
   try {
@@ -39,10 +50,22 @@ function authenticate(req, res, next) {
     return next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
-      return errorResponse(res, 'Token sudah kadaluarsa', null, 401, ErrorCode.TOKEN_EXPIRED);
+      return errorResponse(
+        res, 
+        'Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan',
+        null, 
+        401, 
+        ErrorCode.TOKEN_EXPIRED
+      );
     }
 
-    return errorResponse(res, 'Token tidak valid', null, 401, ErrorCode.TOKEN_INVALID);
+    return errorResponse(
+      res, 
+      'Token tidak valid atau rusak. Silakan login kembali',
+      null, 
+      401, 
+      ErrorCode.TOKEN_INVALID
+    );
   }
 }
 

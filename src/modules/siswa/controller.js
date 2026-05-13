@@ -93,6 +93,78 @@ async function stats(req, res, next) {
   }
 }
 
+async function getDashboard(req, res, next) {
+  try {
+    const result = await siswaService.getDashboard(req.user);
+    return successResponse(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getGrades(req, res, next) {
+  try {
+    const result = await siswaService.getGrades(req.user);
+    return successResponse(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getSchedule(req, res, next) {
+  try {
+    const result = await siswaService.getSchedule(req.user);
+    return successResponse(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getViolations(req, res, next) {
+  try {
+    const result = await siswaService.getViolations(req.user);
+    return successResponse(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getAttendance(req, res, next) {
+  try {
+    const result = await siswaService.getAttendance(req.user);
+    return successResponse(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getNotifications(req, res, next) {
+  try {
+    const result = await siswaService.getNotifications(req.user);
+    return successResponse(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function markNotificationAsRead(req, res, next) {
+  try {
+    const result = await siswaService.markNotificationAsRead(req.user, req.params.id);
+    return successResponse(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function markAllNotificationsAsRead(req, res, next) {
+  try {
+    const result = await siswaService.markAllNotificationsAsRead(req.user);
+    return successResponse(res, result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   list,
   detail,
@@ -101,4 +173,12 @@ module.exports = {
   remove,
   importData,
   stats,
+  getDashboard,
+  getGrades,
+  getSchedule,
+  getViolations,
+  getAttendance,
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead
 };

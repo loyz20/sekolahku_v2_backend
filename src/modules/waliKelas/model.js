@@ -29,10 +29,14 @@ async function getClassStudents(rombelId) {
 async function getClassAttendanceStats(rombelId, tanggal) {
   const [rows] = await pool.query(
     `SELECT 
-        status, COUNT(*) as count
-     FROM presensi_pembelajaran pp
-     JOIN anggota_rombel ar ON pp.peserta_didik_id = ar.peserta_didik_id
-     WHERE ar.rombel_id = ? AND pp.tanggal = ?
+        CASE 
+          WHEN status_masuk IN ('Valid', 'Terlambat') THEN 'Hadir'
+          ELSE status_masuk 
+        END as status, 
+        COUNT(*) as count
+     FROM absensi a
+     JOIN anggota_rombel ar ON a.peserta_didik_id = ar.peserta_didik_id
+     WHERE ar.rombel_id = ? AND a.tanggal = ?
      GROUP BY status`,
     [rombelId, tanggal]
   );
@@ -68,14 +72,14 @@ async function getClassAttendanceRecap(rombelId, month, year) {
   const [rows] = await pool.query(
     `SELECT 
         pd.id, pd.nama, pd.nis,
-        SUM(CASE WHEN pp.status = 'Hadir' THEN 1 ELSE 0 END) as Hadir,
-        SUM(CASE WHEN pp.status = 'Izin' THEN 1 ELSE 0 END) as Izin,
-        SUM(CASE WHEN pp.status = 'Sakit' THEN 1 ELSE 0 END) as Sakit,
-        SUM(CASE WHEN pp.status = 'Alpa' THEN 1 ELSE 0 END) as Alpa
+        SUM(CASE WHEN a.status_masuk IN ('Valid', 'Terlambat') THEN 1 ELSE 0 END) as Hadir,
+        SUM(CASE WHEN a.status_masuk = 'Izin' THEN 1 ELSE 0 END) as Izin,
+        SUM(CASE WHEN a.status_masuk = 'Sakit' THEN 1 ELSE 0 END) as Sakit,
+        SUM(CASE WHEN a.status_masuk = 'Alpa' THEN 1 ELSE 0 END) as Alpa
      FROM peserta_didik pd
      JOIN anggota_rombel ar ON pd.id = ar.peserta_didik_id
-     LEFT JOIN presensi_pembelajaran pp ON pd.id = pp.peserta_didik_id 
-        AND MONTH(pp.tanggal) = ? AND YEAR(pp.tanggal) = ?
+     LEFT JOIN absensi a ON pd.id = a.peserta_didik_id 
+        AND MONTH(a.tanggal) = ? AND YEAR(a.tanggal) = ?
      WHERE ar.rombel_id = ?
      GROUP BY pd.id, pd.nama, pd.nis
      ORDER BY pd.nama ASC`,
@@ -110,6 +114,19 @@ async function getClassUpcomingBirthdays(rombelId) {
   return rows;
 }
 
+async function getUnrecordedStudents(rombelId, tanggal) {
+    const [rows] = await pool.query(
+        `SELECT pd.id, pd.nama, pd.nis
+         FROM peserta_didik pd
+         JOIN anggota_rombel ar ON pd.id = ar.peserta_didik_id
+         LEFT JOIN absensi a ON pd.id = a.peserta_didik_id AND a.tanggal = ?
+         WHERE ar.rombel_id = ? AND a.id IS NULL
+         ORDER BY pd.nama ASC`,
+        [tanggal, rombelId]
+    );
+    return rows;
+}
+
 module.exports = {
   getMyClass,
   getClassStudents,
@@ -117,4 +134,5 @@ module.exports = {
   getTopViolationClass,
   getClassAttendanceRecap,
   getClassUpcomingBirthdays,
+  getUnrecordedStudents,
 };

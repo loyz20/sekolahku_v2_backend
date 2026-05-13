@@ -21,8 +21,8 @@ app.use(helmet({
 	crossOriginResourcePolicy: false, // Allow cross-origin images
 }));
 
-// Serve static files from uploads folder
-app.use('/api/v1/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve static files from public/uploads folder
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // CORS
 const corsOrigin = process.env.CORS_ORIGIN;
@@ -35,8 +35,8 @@ app.use(cors({
 app.use(compression());
 
 // Body parsers
-app.use(express.json({ limit: '16kb' }));
-app.use(express.urlencoded({ extended: true, limit: '16kb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Cookie parser (for reading httpOnly cookies)
 app.use(cookieParser());

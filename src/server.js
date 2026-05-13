@@ -1,5 +1,9 @@
 require('dotenv').config();
 
+// Validate environment variables early
+const { validateEnv } = require('./config/env');
+validateEnv();
+
 const app = require('./app');
 const { pool } = require('./config/db');
 

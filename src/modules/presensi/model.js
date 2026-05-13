@@ -77,8 +77,38 @@ async function getRekapPresensi(sekolahId, pembelajaranId, semesterId) {
   return rows;
 }
 
+async function getStudentAttendanceHistory(studentId, sekolahId, semesterId) {
+  const [rows] = await pool.query(
+    `SELECT pp.*, mp.nama as mata_pelajaran
+     FROM presensi_pembelajaran pp
+     JOIN pembelajaran pb ON pp.pembelajaran_id = pb.id
+     JOIN mata_pelajaran mp ON pb.mata_pelajaran_id = mp.id
+     WHERE pp.peserta_didik_id = ? AND pp.sekolah_id = ? AND pp.semester_id = ?
+     ORDER BY pp.tanggal DESC, mp.nama ASC`,
+    [studentId, sekolahId, semesterId]
+  );
+  return rows;
+}
+
+async function getStudentAttendanceSummary(studentId, sekolahId, semesterId) {
+  const [rows] = await pool.query(
+    `SELECT 
+        SUM(CASE WHEN status = 'Hadir' THEN 1 ELSE 0 END) as hadir,
+        SUM(CASE WHEN status = 'Izin' THEN 1 ELSE 0 END) as izin,
+        SUM(CASE WHEN status = 'Sakit' THEN 1 ELSE 0 END) as sakit,
+        SUM(CASE WHEN status = 'Alpa' THEN 1 ELSE 0 END) as alpa,
+        COUNT(*) as total
+     FROM presensi_pembelajaran
+     WHERE peserta_didik_id = ? AND sekolah_id = ? AND semester_id = ?`,
+    [studentId, sekolahId, semesterId]
+  );
+  return rows[0];
+}
+
 module.exports = {
   upsertPresensi,
   listPresensi,
   getRekapPresensi,
+  getStudentAttendanceHistory,
+  getStudentAttendanceSummary
 };

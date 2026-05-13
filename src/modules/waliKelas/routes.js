@@ -8,6 +8,7 @@ router.use(authenticate);
 router.get('/dashboard', waliKelasController.getDashboardStats);
 router.get('/students', waliKelasController.getStudents);
 router.get('/attendance-recap', waliKelasController.getAttendanceRecap);
+router.post('/attendance', waliKelasController.updateAttendance);
 router.post('/broadcast', waliKelasController.broadcastMessage);
 
 module.exports = router;

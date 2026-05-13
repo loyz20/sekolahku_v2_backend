@@ -255,6 +255,74 @@ async function getSiswaStats(sekolahId) {
   };
 }
 
+async function getStudentGrades(studentId, rombelId, sekolahId) {
+  // Get active semester
+  const [semesters] = await pool.query('SELECT id FROM semester WHERE aktif = 1 LIMIT 1');
+  const semesterId = semesters[0]?.id;
+
+  // Get all subjects in the rombel
+  const [pembelajarans] = await pool.query(`
+      SELECT p.id as pembelajaran_id, mp.nama as mapel_nama, p.ptk_id
+      FROM pembelajaran p
+      JOIN mata_pelajaran mp ON p.mata_pelajaran_id = mp.id
+      WHERE p.rombel_id = ? AND p.sekolah_id = ?
+  `, [rombelId, sekolahId]);
+
+  // For each subject, calculate grades
+  const results = [];
+  for (const p of pembelajarans) {
+      // 1. Get categories and weights
+      const [categories] = await pool.query(
+          'SELECT id, nama, bobot FROM kategori_penilaian WHERE sekolah_id = ? AND ptk_id = ?',
+          [sekolahId, p.ptk_id]
+      );
+      const totalWeight = categories.reduce((sum, c) => sum + Number(c.bobot), 0);
+
+      // 2. Get average grade per category for this student
+      const [grades] = await pool.query(`
+          SELECT p.kategori_id, AVG(ns.nilai) as rata_rata
+          FROM penilaian p
+          JOIN nilai_siswa ns ON p.id = ns.penilaian_id
+          WHERE p.sekolah_id = ? AND ns.peserta_didik_id = ? AND p.pembelajaran_id = ? AND p.semester_id = ?
+          GROUP BY p.kategori_id
+      `, [sekolahId, studentId, p.pembelajaran_id, semesterId]);
+
+      let weightedSum = 0;
+      const details = {};
+      categories.forEach(cat => {
+          const entry = grades.find(g => g.kategori_id === cat.id);
+          const score = entry ? Number(entry.rata_rata) : 0;
+          weightedSum += score * (Number(cat.bobot) / (totalWeight || 1));
+          details[cat.nama.toLowerCase()] = score;
+      });
+
+      results.push({
+          id: p.pembelajaran_id,
+          nama_mapel: p.mapel_nama,
+          nilai_tugas: details['tugas'] || 0,
+          nilai_uh: details['uh'] || details['ulangan harian'] || 0,
+          nilai_uts: details['uts'] || 0,
+          nilai_uas: details['uas'] || 0,
+          nilai_akhir: Math.round(weightedSum),
+          grade: weightedSum >= 90 ? 'A' : weightedSum >= 80 ? 'B' : weightedSum >= 70 ? 'C' : weightedSum >= 60 ? 'D' : 'E'
+      });
+  }
+  return results;
+}
+
+async function getStudentSchedule(rombelId, sekolahId) {
+  const [rows] = await pool.query(`
+      SELECT j.id, mp.nama as nama_mapel, p.nama as nama_guru, j.hari, j.jam_mulai, j.jam_selesai, j.ruangan
+      FROM jadwal_pembelajaran j
+      JOIN pembelajaran pb ON j.pembelajaran_id = pb.id
+      JOIN mata_pelajaran mp ON pb.mata_pelajaran_id = mp.id
+      JOIN ptk p ON pb.ptk_id = p.id
+      WHERE pb.rombel_id = ? AND j.sekolah_id = ?
+      ORDER BY FIELD(j.hari, "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"), j.jam_mulai ASC
+  `, [rombelId, sekolahId]);
+  return rows;
+}
+
 module.exports = {
   listSiswa,
   findSiswaById,
@@ -264,4 +332,6 @@ module.exports = {
   updateSiswa,
   deleteSiswa,
   getSiswaStats,
+  getStudentGrades,
+  getStudentSchedule
 };

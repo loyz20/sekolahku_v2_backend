@@ -84,9 +84,22 @@ async function deleteSemester(id, sekolahId) {
   return result.affectedRows > 0;
 }
 
+async function getActiveSemester(sekolahId) {
+  const [rows] = await pool.query(
+    `SELECT s.id, s.tahun_ajaran_id, s.nama, s.aktif, ta.tahun
+     FROM semester s
+     JOIN tahun_ajaran ta ON ta.id = s.tahun_ajaran_id
+     WHERE ta.sekolah_id = ? AND s.aktif = 1
+     LIMIT 1`,
+    [sekolahId]
+  );
+  return rows[0] || null;
+}
+
 module.exports = {
   listSemester,
   createSemester,
   updateSemester,
   deleteSemester,
+  getActiveSemester,
 };

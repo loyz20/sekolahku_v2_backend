@@ -62,8 +62,12 @@ async function login(req, res, next) {
       description: `${result.user.username} berhasil login ke dalam sistem`
     });
     
-    // Return user data only (tokens in httpOnly cookies)
-    return successResponse(res, { user: result.user }, 'Success', 200);
+    // Return user data and tokens (tokens also in httpOnly cookies for web)
+    return successResponse(res, { 
+      user: result.user,
+      access_token: result.access_token,
+      refresh_token: result.refresh_token
+    }, 'Success', 200);
   } catch (error) {
     return next(error);
   }
@@ -71,7 +75,7 @@ async function login(req, res, next) {
 
 async function refresh(req, res, next) {
   try {
-    const refreshToken = req.cookies.refresh_token;
+    const refreshToken = req.cookies.refresh_token || req.body.refresh_token;
     const sessionInfo = {
       ipAddress: req.ip,
       userAgent: req.get('user-agent')
@@ -79,7 +83,11 @@ async function refresh(req, res, next) {
     const result = await authService.refresh(refreshToken, sessionInfo);
     setAuthCookies(res, result.access_token, result.refresh_token);
     
-    return successResponse(res, { user: result.user }, 'Success', 200);
+    return successResponse(res, { 
+      user: result.user,
+      access_token: result.access_token,
+      refresh_token: result.refresh_token
+    }, 'Success', 200);
   } catch (error) {
     return next(error);
   }
@@ -87,7 +95,7 @@ async function refresh(req, res, next) {
 
 async function logout(req, res, next) {
   try {
-    const refreshToken = req.cookies.refresh_token;
+    const refreshToken = req.cookies.refresh_token || req.body.refresh_token;
     await authService.logout(refreshToken);
     clearAuthCookies(res);
     return res.status(204).send();
@@ -98,7 +106,7 @@ async function logout(req, res, next) {
 
 async function getSessions(req, res, next) {
   try {
-    const currentToken = req.cookies.refresh_token;
+    const currentToken = req.cookies.refresh_token || req.body.refresh_token;
     const result = await authService.getSessions(req.user.id);
     
     const sessions = result.map(s => {

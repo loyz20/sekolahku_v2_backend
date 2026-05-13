@@ -50,8 +50,12 @@ async function login(username, password, { ipAddress, userAgent } = {}) {
       username: user.username,
       role: user.role,
       nama: user.nama_asli,
+      email: user.email,
+      phone: user.phone,
       sekolah_id: user.sekolah_id,
       ref_id: user.ref_id,
+      nisn: user.nisn,
+      rombel_nama: user.rombel_nama,
       is_wali_kelas: !!user.is_wali_kelas,
     },
   };
@@ -99,6 +103,8 @@ async function refresh(refreshToken, { ipAddress, userAgent } = {}) {
       nama: user.nama_asli,
       sekolah_id: user.sekolah_id,
       ref_id: user.ref_id,
+      nisn: user.nisn,
+      rombel_nama: user.rombel_nama,
       is_wali_kelas: !!user.is_wali_kelas,
     },
   };
@@ -131,6 +137,8 @@ async function getUserProfile(userId) {
     phone: user.phone,
     sekolah_id: user.sekolah_id,
     ref_id: user.ref_id,
+    nisn: user.nisn,
+    rombel_nama: user.rombel_nama,
     is_wali_kelas: !!user.is_wali_kelas
   };
 }

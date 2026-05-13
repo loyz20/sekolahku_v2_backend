@@ -4,6 +4,8 @@ const absensiSchema = z.object({
   peserta_didik_id: z.string().uuid('Peserta didik tidak valid'),
   latitude: z.number(),
   longitude: z.number(),
+  is_mock_location: z.boolean().optional(),
+  foto: z.string().optional(),
 });
 
 const rekapAbsensiQuerySchema = z.object({
